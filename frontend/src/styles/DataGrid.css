@@ -1,0 +1,7 @@
+.MuiDataGrid-footerContainer {
+    justify-content: flex-start !important;
+}
+
+.MuiTablePagination-root {
+    overflow: visible !important;
+}

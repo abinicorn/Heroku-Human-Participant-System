@@ -1,0 +1,6 @@
+.emailContainer {
+    word-break: break-word;
+    white-space: normal;
+    width: 85%;
+    overflow: hidden;
+}
