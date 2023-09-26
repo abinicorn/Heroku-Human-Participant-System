@@ -1,7 +1,0 @@
-[2023-09-25T10:16:10.160] [INFO] info - App server listening on port 3001!
-[2023-09-25T10:16:15.303] [INFO] info - Researcher.router.post./login. ResearcherId : 64fe98fdae1ff28bdcd455a7 login success
-[2023-09-25T10:16:15.408] [INFO] info - Researcher.router.get./info/:researcherId. ResearcherId: 64fe98fdae1ff28bdcd455a7 info retrieved
-[2023-09-25T10:16:15.454] [INFO] info - Researcher.router.get./info/:researcherId. ResearcherId: 64fe98fdae1ff28bdcd455a7 info retrieved
-[2023-09-25T10:16:16.969] [INFO] info - Researcher.router.get/studyList/:researcherId. Get 64fe98fdae1ff28bdcd455a7 study info success
-[2023-09-25T10:16:18.358] [INFO] info - Researcher.router.get/studyList/:researcherId. Get 64fe98fdae1ff28bdcd455a7 study info success
-[2023-09-25T10:16:19.731] [INFO] info - Researcher.router.get/studyList/:researcherId. Get 64fe98fdae1ff28bdcd455a7 study info success
