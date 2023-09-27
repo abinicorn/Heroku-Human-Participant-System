@@ -69,6 +69,18 @@ class StudyParticipantDao {
         return await StudyParticipant.find({participantId}).lean();
     }
 
+    static async activateExistingParticipants(existingParticipants) {
+        const idsToActivate = existingParticipants.map(p => p._id);
+        if (idsToActivate.length > 0) {
+            await StudyParticipant.updateMany(
+                { _id: { $in: idsToActivate }, isActive: false },
+                { $set: { isActive: true } }
+            );
+        }
+        return await StudyParticipant.find({ _id: { $in: idsToActivate } }).lean();
+    }
+    
+
     static async updateStudyParticipantById(id, updateData) {
         const studyParticipant = await StudyParticipant.findByIdAndUpdate(id, updateData, {new: true});
         return studyParticipant != null;

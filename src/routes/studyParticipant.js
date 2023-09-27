@@ -104,6 +104,9 @@ router.post('/:studyId', async (req, res) => {
         // check if some studyparticipants are existing
         const existingParticipants = await StudyParticipantDao.checkExistingStudyParticipants(studyId, participantIds);
 
+        // Activate existing participants and get their IDs
+        const activatedExistingParticipants = await StudyParticipantDao.activateExistingParticipants(existingParticipants);
+
         // filter existing studyparticipants
         const newParticipantIds = participantIds.filter(id => 
             !existingParticipants.some(p => p.participantId.toString() === id)
@@ -111,9 +114,11 @@ router.post('/:studyId', async (req, res) => {
 
         const insertedDocs = await StudyParticipantDao.createMultipleStudyParticipants(studyId, newParticipantIds);
 
-        if (insertedDocs && insertedDocs.length > 0) {
+        const allInsertedDocs = [...insertedDocs, ...activatedExistingParticipants];
+
+        if (allInsertedDocs && allInsertedDocs.length > 0) {
             // transform
-            const resultIds = insertedDocs.map(doc => doc._id);
+            const resultIds = allInsertedDocs.map(doc => doc._id);
             const newStudyParticipants = await StudyParticipantDao.findMultipleStudyParticipantsByIds(resultIds)
             const transformedStudyParticipants = newStudyParticipants.map(transformDocument);
             res.status(HTTP_CREATED).json(transformedStudyParticipants);

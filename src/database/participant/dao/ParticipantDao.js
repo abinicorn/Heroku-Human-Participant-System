@@ -22,6 +22,36 @@ class ParticipantDao {
     //     return (await Participant.findOne({ email: email }, '_id'))?._id ?? null;
     // }
 
+    static async addTagByIds(ids, tagId) {
+        const matchedDocuments = await Participant.updateMany(
+            { _id: { $in: ids } },
+            { $addToSet: { tag: tagId } } // 使用 $addToSet 来避免重复添加 tagId
+        );
+
+        if(matchedDocuments.modifiedCount == 0) {
+            throw new Error('No documents found for the provided IDs.');
+        }
+        
+        // if(!matchedDocuments) {
+        //     throw new Error('No documents found for the provided IDs.');
+        // }
+        
+        return matchedDocuments.modifiedCount; // 返回实际更新的文档数量。
+    }
+
+    static async deleteTagByIds(ids, tagId) {
+        const matchedDocuments = await Participant.updateMany(
+            { _id: { $in: ids } },
+            { $pull: { tag: tagId } } // 使用 $pull 来删除 tag 数组中的 tagId
+        );
+        
+        if(matchedDocuments.modifiedCount == 0) {
+            throw new Error('No documents found for the provided IDs.');
+        }
+        
+        return matchedDocuments.modifiedCount; // 返回实际更新的文档数量。
+    }
+
     static async updateParticipantById(participantId, updateData) {
         const participant = await Participant.findByIdAndUpdate(participantId, updateData, {new: true});
         return participant != null;

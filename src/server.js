@@ -6,6 +6,15 @@ import {swaggerSpec} from './config/swaggerConfig';
 import authenticateToken from './middlewares/authenticateToken';
 import cors from 'cors';
 
+// Setup log4js
+const log4js = require('./utils/log4js');
+
+process.on('uncaughtException', (err) => {
+    log4js.error(`There was an uncaught error: ${err}` )
+    console.error('There was an uncaught error', err);
+    process.exit(1);
+});
+
 dotenv.config();
 
 // Setup Express
@@ -33,9 +42,6 @@ app.use(cors({
     origin: 'https://human-participant-system-frontend.vercel.app', // 允许的前端域名
     credentials: true, // 允许发送和接收Cookie
 }));
-
-// Setup log4js
-const log4js = require('./utils/log4js')
 
 app.use(cookieParser());
 

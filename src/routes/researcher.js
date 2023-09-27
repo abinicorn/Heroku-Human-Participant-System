@@ -520,7 +520,8 @@ router.post('/add', async (req, res) => {
         email: email,
         username: username,
         password: '123456',
-        studyList: []
+        studyList: [],
+        isActive: true
     });
     try{
         await ResearcherDao.createResearch(newResearcher);
@@ -600,6 +601,24 @@ router.get('/studyList/:researcherId', async (req, res) => {
     }
 
 })
+
+
+router.get('/allResearchers', async (req, res) => {
+    
+    try{ 
+        const allResearchers= await ResearcherDao.retrieveResearcherList();
+        console.log(allResearchers);
+        log4js.info(`Researcher.router.get/allResearchers. Get all researchers success`);
+        return res.status(HTTP_SUCCESS)
+            .json(allResearchers)
+    } catch (error) {
+        log4js.error(`Researcher.router.get/allResearchers. Internal server error: ${error}`);
+        return res.status(HTTP_SERVER_ERROR).json({ message: 'Server error'});
+
+        }
+
+})
+
 
 
 

@@ -20,8 +20,8 @@ router.post('/add', async (req, res) => {
 
     // wrong syntax if its not array
     if (!Array.isArray(participantsData)) {
-        res.status(HTTP_BAD_REQUEST).json("Wrong request syntax.");
         log4js.warn(`Participant.router.post./add. Wrong request syntax.`);
+        return res.status(HTTP_BAD_REQUEST).json("Wrong request syntax.");
     }
 
     try {
@@ -169,6 +169,79 @@ router.get('/check/:participantId', async (req, res) => {
     }
 });
 
+// Update tag for multiple participants by their IDs
+router.put('/update-tag', async (req, res) => {
+    const { updateIds, tagId } = req.body;
+
+    if (!Array.isArray(updateIds) || !tagId) {
+        log4js.warn(`Participant.router.put./update-tag. Both updateIds (as an array) and tagId are required in the request body.`)
+        return res.status(HTTP_BAD_REQUEST).json({
+            error: "Both updateIds (as an array) and tagId are required in the request body."
+        });
+    }
+
+    try {
+        const updatedCount = await ParticipantDao.addTagByIds(updateIds, tagId);
+
+        if (updatedCount > 0) {
+            res.status(HTTP_SUCCESS).json({ message: `${updatedCount} documents updated successfully.` });
+            log4js.info(`Participant.router.put./update-tag. ${updatedCount} documents updated successfully.`);
+        } else {
+            res.status(HTTP_NOT_FOUND).json({ error: "No matching documents found for the provided IDs." });
+            log4js.warn(`Participant.router.put./update-tag. No matching documents found for the provided IDs ${updateIds}.`);
+        }
+
+    } catch (error) {
+        if (process.env.NODE_ENV === 'production') {
+            res.status(HTTP_SERVER_ERROR).json({ error: "Internal server error." });
+            log4js.error(`Participant.router.put./update-tag. Internal server error : ${error}`);
+        } else {
+            res.status(HTTP_SERVER_ERROR).json({
+                error: "Failed to update tag for participants.",
+                details: error.message
+            });
+            log4js.error(`Participant.router.put./update-tag. Failed to update tag for participants : ${error}`);
+        }
+    }
+});
+
+// Delete tag for multiple participants by their IDs
+router.put('/delete-tag', async (req, res) => {
+    const { deleteIds, tagId } = req.body;
+
+    if (!Array.isArray(deleteIds) || !tagId) {
+        log4js.warn(`Participant.router.put./delete-tag. Both deleteIds (as an array) and tagId are required in the request body.`)
+        return res.status(HTTP_BAD_REQUEST).json({
+            error: "Both deleteIds (as an array) and tagId are required in the request body."
+        });
+    }
+
+    try {
+        const updatedCount = await ParticipantDao.deleteTagByIds(deleteIds, tagId);
+
+        if (updatedCount > 0) {
+            res.status(HTTP_SUCCESS).json({ message: `${updatedCount} documents updated successfully.` });
+            log4js.info(`Participant.router.put./delete-tag. ${updatedCount} documents updated successfully.`);
+        } else {
+            res.status(HTTP_NOT_FOUND).json({ error: "No matching documents found for the provided IDs." });
+            log4js.warn(`Participant.router.put./delete-tag. No matching documents found for the provided IDs ${deleteIds}.`);
+        }
+
+    } catch (error) {
+        if (process.env.NODE_ENV === 'production') {
+            res.status(HTTP_SERVER_ERROR).json({ error: "Internal server error." });
+            log4js.error(`Participant.router.put./delete-tag. Internal server error : ${error}`);
+        } else {
+            res.status(HTTP_SERVER_ERROR).json({
+                error: "Failed to delete tag for participants.",
+                details: error.message
+            });
+            log4js.error(`Participant.router.put./delete-tag. Failed to delete tag for participants : ${error}`);
+        }
+    }
+});
+
+
 // Toggle a boolean property for multiple study-participants by their IDs
 router.put('/toggle-property', async (req, res) => {
     const { ids, propertyName } = req.body;
@@ -267,54 +340,3 @@ router.delete('/:participantId', async (req, res) => {
 
 
 export default router;
-
-//Retrieve all related participants by studyId
-// router.get('/study-participant/list/:studyId', async (req, res) => {
-
-//     const { studyId } = req.params;
-//     const studyParticipants = await StudyParticipantDao.findStudyParticipantsByStudyId(studyId).lean();
-
-//     const participantsInfoPromises = studyParticipants.map(async studyParticipant => {
-//         const participantInfo = await ParticipantDao.getParticipantById(studyParticipant.participantId);
-        
-//         const tagsInfoPromises = participantInfo.tag.map(tagId => TagDao.getTagById(tagId));
-//         const tagsInfo = await Promise.all(tagsInfoPromises);
-        
-//         participantInfo.tagsInfo = tagsInfo;
-//         studyParticipant.participantInfo = participantInfo;
-
-//         return studyParticipant; // Return the modified studyParticipant
-//     });
-
-//     const participantsWithInfo = await Promise.all(participantsInfoPromises);
-
-//     if (participantsWithInfo.length > 0) {
-//         res.json(participantsWithInfo);
-//     }
-//     else {
-//         res.sendStatus(HTTP_NO_CONTENT);
-//     }
-// });
-
-
-// Create new participant
-// router.post('/participant/create/:studyId', async (req, res) => {
-
-//     const { studyId } = req.params;
-
-//     const newParticipant = await ParticipantDao.createParticipant({
-//         firstName: req.body.firstName,
-//         lastName: req.body.lastName,
-//         email: req.body.email,
-//         tag: req.body.tagList,
-//         isWillContact: req.body.isWillContact
-//     });
-
-//     if (newParticipant) {
-//         res.status(HTTP_CREATED)
-//            .header('Location', `/participant/${newParticipant._id}`)
-//            .json(newParticipant);
-//     } else {
-//         res.status(HTTP_BAD_REQUEST).json({ error: "Failed to create participant" });
-//     }
-// });

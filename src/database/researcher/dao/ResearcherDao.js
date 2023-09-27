@@ -8,20 +8,13 @@ import {HTTP_LOGIN_ERROR} from "../../../enum";
 class ResearcherDao  {
 
     static async  createResearcher(researcher) {
+        const hashedPassword = await bcrypt.hash(researcher.password, 10);
 
-        bcrypt.hash(researcher.password, 10, async (err, hash) => {
-            if (err) {
-                return;
-            }
+        researcher.password = hashedPassword;
+        const dbResearcher = new Researcher(researcher);
 
-            researcher.password = hash;
-
-            const dbResearcher = new Researcher(researcher);
-            await dbResearcher.save();
-            return dbResearcher;
-
-        })
-
+        await dbResearcher.save();
+        return dbResearcher;
     }
 
     static async  retrieveResearcherList() {
@@ -50,9 +43,7 @@ class ResearcherDao  {
     }
 
     static async getResearcherByEmail(email){
-        const researcher = await Researcher.findOne({
-            email: { $regex: email, $options: 'i' }
-        });
+        const researcher = await Researcher.findOne({email: email});
 
         return researcher;
     }

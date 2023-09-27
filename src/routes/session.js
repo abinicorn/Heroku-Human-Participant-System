@@ -116,12 +116,14 @@ router.put('/:sessionId', async (req, res) => {
     const updateData = req.body;
     
     try {
-        const success = await SessionDao.updateSession(sessionId, updateData);
-        res.status(success ? HTTP_NO_CONTENT : HTTP_NOT_FOUND);
-        if(success) {
-            log4js.info(`Session.router.put./:sessionId. SessionId: ${sessionId} updated`)
-        } else {
-            log4js.warn(`Session.router.put./:sessionId. SessionId: ${sessionId} unsuccessful update`)
+        const updatedSession = await SessionDao.updateSession(sessionId, updateData);
+        if (!updatedSession) {
+            res.status(HTTP_NOT_FOUND).json({ message: 'Session not found' })
+            log4js.warn(`Session.router.put./:sessionId. SessionId: ${sessionId} not found`)
+        }
+        else{
+            res.status(HTTP_SUCCESS).json(updatedSession);
+            log4js.info(`Session.router.put./:sessionId. SessionId: ${sessionId} successfully updated`)
         }
 
     } catch (error) {

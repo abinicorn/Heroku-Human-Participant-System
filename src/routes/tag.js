@@ -64,7 +64,8 @@ router.post('/add', async (req, res) => {
     // wrong syntax if its not array
     if (!Array.isArray(tagsData)) {
         res.status(HTTP_BAD_REQUEST).json("Wrong request syntax.");
-        log4js.warn(`Tag.router.post./add. Wrong request syntax.}`)
+        log4js.warn(`Tag.router.post./add. Wrong request syntax.}`);
+        return;
     }
 
     try {
@@ -82,7 +83,7 @@ router.post('/add', async (req, res) => {
             success: result,
             existing: existingTags
         });
-        log4js.info(`Tag.router.post./add. TagId:${tagId} created`)
+        log4js.info(`Tag.router.post./add. Tag${tagNames} created`);
 
     } catch (error) {
         if (error.writeErrors) {

@@ -60,24 +60,26 @@ router.post('/:researcherId', async (req, res) => {
     try {
         const researcherId= req.params.researcherId;
         const studyData = req.body; 
+        const study = await StudyDao.findStudyByCode(studyData.studyCode);
         // Create a new study
-        const newStudy = await StudyDao.createStudy(studyData);
-
-        // Find the researcher and update their studyList
-        console.log("Researcher: " +studyData.creator);
-        const updatedResearcher = await ResearcherDao.updateResearcherByResearcherId(
-            studyData.creator,
-            newStudy._id
-        );
-
-        res.status(HTTP_CREATED).json({
-            message: 'Study created and associated with researcher',
-            study: newStudy,
-            researcher: updatedResearcher
-        })
-        log4js.info(`Study.router.post./:researcherId. StudyId:${newStudy._id} successfully created. ResearcherId: ${updatedResearcher._id} successfully updated`)
-        console.log("passed");
-        
+        if(!!study){
+            console.log("Find by studycode: ", study);
+            res.status(HTTP_BAD_REQUEST).json({ message: 'Study code already exists' });
+        }else{
+            const newStudy = await StudyDao.createStudy(studyData);// Find the researcher and update their studyList
+            console.log("Researcher: " +studyData.creator);
+            const updatedResearcher = await ResearcherDao.updateResearcherByResearcherId(
+                studyData.creator,
+                newStudy._id
+            );
+            res.status(HTTP_CREATED).json({
+                message: 'Study created and associated with researcher',
+                study: newStudy,
+                researcher: updatedResearcher
+            })
+            log4js.info(`Study.router.post./:researcherId. StudyId:${newStudy._id} successfully created. ResearcherId: ${updatedResearcher._id} successfully updated`)
+            console.log("passed");
+        }
     } catch (error) {
         console.log(error);
         res.status(HTTP_SERVER_ERROR).json({ error: 'Error creating study' });
@@ -178,13 +180,18 @@ router.put('/associateResearcher/:studyId/:researcherId', async (req, res) => {
 router.post('/addResearcher/:studyId', async (req, res) => {
     const {firstName, lastName, email} = req.body;
     const studyId = req.params.studyId;
-
+    const existingResearcher = await ResearcherDao.getResearcherByEmail(email);
     try{
         const username = email.split('@')[0];
         const study = await StudyDao.retrieveStudy(studyId);
         if (!study) {
             log4js.warn(`Study.router.post./addResearcher/:studyId. Study ${studyId} not found`);
             return res.status(HTTP_NOT_FOUND).json({message: 'study not found'})
+        }
+        else if(existingResearcher){
+            
+            res.status(HTTP_BAD_REQUEST).json({message: 'Researcher already exists'});
+            log4js.warn(`Study.router.post./addResearcher/:studyId. Researcher ${existingResearcher._id} already exists`);
         }
         else{
             const newResearcher= new Researcher({
@@ -193,7 +200,8 @@ router.post('/addResearcher/:studyId', async (req, res) => {
                 email: email,
                 username: username,
                 password: '123456',
-                studyList: []
+                studyList: [],
+                isActive: true
             });
 
             const updateResearcher= await ResearcherDao.createResearcher(newResearcher);
@@ -202,9 +210,9 @@ router.post('/addResearcher/:studyId', async (req, res) => {
             res.status(HTTP_SUCCESS).json({username : newResearcher.username, message: 'New researcher added & study updated successfully'});
             log4js.info(`Study.router.post./addResearcher/:studyId. New researcher ${updateResearcher._id} added & study ${studyId} updated successfully`)
         }
-    }catch (err) {
+    }catch (error) {
         res.status(HTTP_SERVER_ERROR).json ({message: 'Adding researcher associating with study error'});
-        log4js.error(`Study.router.post./addResearcher/:studyId. Adding researcher associating with study ${studyId} error : ${error}`);
+        log4js.error(`Study.router.post./addResearcher/:studyId. Adding researcher associating with study error: ${error}`);
     }
 });
 

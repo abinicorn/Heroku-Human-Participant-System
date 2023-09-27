@@ -101,6 +101,10 @@ class StudyDao {
         const dbStudy = await Study.findOne({ _id: studyId });
         return dbStudy.creator;
     }
+    static async findStudyByCode(code) {
+        const dbStudy = await Study.findOne({ studyCode: code });
+        return dbStudy;
+    }
 
 }
 
