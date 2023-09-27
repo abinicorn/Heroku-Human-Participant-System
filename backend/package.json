@@ -2,6 +2,10 @@
   "name": "backend",
   "version": "1.0.0",
   "description": "",
+  "engines": {
+    "yarn": ">=1.0.0",
+    "node": ">=14.0.0"
+  },
   "main": "./src/server.js",
   "scripts": {
     "start": "node -r esm ./src/server.js",
