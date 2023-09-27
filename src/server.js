@@ -30,7 +30,7 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 
 app.use(cors({
-    origin: '*', // 允许的前端域名
+    origin: 'https://human-participant-system-frontend.vercel.app', // 允许的前端域名
     credentials: true, // 允许发送和接收Cookie
 }));
 
