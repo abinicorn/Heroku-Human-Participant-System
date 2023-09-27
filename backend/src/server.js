@@ -46,14 +46,7 @@ import routes from './routes/index.js';
 import cookieParser from "cookie-parser";
 app.use('/', routes);
 
-if (process.env.NODE_ENV === "production" || process.env.NODE_ENV === "staging") {
-    app.use(express.static("client/build"));
-    app.get("*", (req, res) => {
-    res.sendFile(path.join(__dirname + "/client/build/index.html"));
-    });
-}
-
-
+// Setup token authenticate
 
 // Start the DB running. Then, once it's connected, start the server.
 mongoose.connect( process.env.DB_URL, { useNewUrlParser: true })

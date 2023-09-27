@@ -5,6 +5,7 @@ import {ResearcherDao} from "../database/researcher/dao/ResearcherDao.js";
 import StudyDao from "../database/study/dao/StudyDao.js";
 import Researcher from "../database/researcher/domain/ResearcherDomain.js";
 const log4js = require('../utils/log4js.js');
+import bcrypt from 'bcrypt';
 
 import { HTTP_SUCCESS,
     HTTP_NOT_FOUND,
@@ -82,11 +83,16 @@ const expiresIn = '43200000';
 router.post('/login', async (req, res) => {
     const { username, password } = req.body;
     try {
-        const user = await ResearcherDao.login(username, password);
-        if (!user) {
-            log4js.warn(`Researcher.router.post./login. Failed to login : Username or password error`);
-            return res.status(HTTP_LOGIN_ERROR).json({ message: 'Username or password error' })
-        }
+        const user = await ResearcherDao.login(username);
+
+       const loginSuccess = await bcrypt.compare(password, user.password);
+
+        if ( !loginSuccess) {
+                log4js.warn(`Researcher.router.post./login. Failed to login : Username or password error`);
+                return res.status(HTTP_LOGIN_ERROR).json({ message: 'Username or password error' })
+            }
+
+
         const { _id } = user;
         const token = jwt.sign({ _id }, secret
             , { expiresIn }
@@ -303,16 +309,18 @@ router.put('/resetPwd', async (req, res) => {
     try{
         const user = await ResearcherDao.getResearcherById(id);
 
-        if (!await ResearcherDao.checkPassword(currentPwd)){
+        const checkPassword = await bcrypt.compare(currentPwd, user.password);
+
+        console.log(checkPassword);
+        if ( !checkPassword) {
             log4js.warn(`Researcher.router.put./resetPwd. Current password error`);
             return res.status(HTTP_LOGIN_ERROR).json({message: 'Current password error'})
         }
 
 
+        const isError = await ResearcherDao.resetResearcherPwd(user, newPwd);
 
-        const success = await ResearcherDao.resetResearcherPwd(user, newPwd);
-
-        if (!success) {
+        if (isError) {
             log4js.warn(`Researcher.router.put./resetPwd. ResearcherId: ${id} reset password error`);
             return res.status(HTTP_NOT_FOUND).json({ message: 'Reset password error'})
         }

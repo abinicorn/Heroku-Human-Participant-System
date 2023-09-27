@@ -1,4 +1,7 @@
 import  Researcher  from "../domain/ResearcherDomain.js";
+import bcrypt from "bcrypt";
+import log4js from "../../../utils/log4js";
+import {HTTP_LOGIN_ERROR} from "../../../enum";
 
 
 
@@ -6,9 +9,18 @@ class ResearcherDao  {
 
     static async  createResearcher(researcher) {
 
-        const dbResearcher = new Researcher(researcher);
-        await dbResearcher.save();
-        return dbResearcher;
+        bcrypt.hash(researcher.password, 10, async (err, hash) => {
+            if (err) {
+                return;
+            }
+
+            researcher.password = hash;
+
+            const dbResearcher = new Researcher(researcher);
+            await dbResearcher.save();
+            return dbResearcher;
+
+        })
 
     }
 
@@ -38,7 +50,9 @@ class ResearcherDao  {
     }
 
     static async getResearcherByEmail(email){
-        const researcher = await Researcher.findOne({email: email});
+        const researcher = await Researcher.findOne({
+            email: { $regex: email, $options: 'i' }
+        });
 
         return researcher;
     }
@@ -60,26 +74,40 @@ class ResearcherDao  {
         return dbResearcher != null;
     }
 
-    static async login(username, password){
+    static async login(username){
 
-        const user = await Researcher.findOne({ username: username, password: password });
+        const user = await Researcher.findOne({ username: username});
 
         return user;
 
     }
 
+
     static async resetResearcherPwd(researcher, newPwd){
 
-        researcher.password = newPwd;
 
-        const dbResearcher = await Researcher.findOneAndUpdate({ _id: researcher._id}, researcher, {new: true});
+        bcrypt.hash(newPwd, 10, async (err, hash) => {
 
-        return dbResearcher != null;
+            researcher.password = hash;
+
+            const dbResearcher = await Researcher.findOneAndUpdate({_id: researcher._id}, researcher, {new: true});
+
+            return !!dbResearcher;
+
+
+        });
+
+
+
     }
 
     static async checkPassword(researcher, password){
 
-        return researcher.password == password;
+        bcrypt.compare(password, researcher.password, (err, result) => {
+
+            return !!result;
+        });
+
 
     }
 
