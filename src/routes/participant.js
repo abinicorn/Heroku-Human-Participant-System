@@ -294,9 +294,12 @@ router.put('/:participantId', async (req, res) => {
         }
 
     } catch (error) {
-        if (process.env.NODE_ENV === 'production') {
-            res.status(HTTP_SERVER_ERROR).json({ error: "Internal server error." });
-            log4js.error(`Participant.router.put./:participantId. Internal server error : ${error}`);
+        if (error.message && error.message.includes('E11000 duplicate key error')) {
+            res.status(400).json({ error: "Email already exists." });
+            log4js.error(`Participant.router.put./:participantId. Email already exists : ${error}`);
+        } else if (process.env.NODE_ENV === 'production') {
+                res.status(HTTP_SERVER_ERROR).json({ error: "Internal server error." });
+                log4js.error(`Participant.router.put./:participantId. Internal server error : ${error}`);
         } else {
             res.status(HTTP_SERVER_ERROR).json({
                 error: "Failed to update participant.",
@@ -304,7 +307,31 @@ router.put('/:participantId', async (req, res) => {
             });
             log4js.error(`Participant.router.put./:participantId. Failed to update participant : ${error}`);
         }
-        
+    }
+});
+
+// anonymize participants in a closed study
+router.delete('/anonymize-participants/:studyId', async (req, res) => {
+    try {
+        const studyId = req.params.studyId;
+        const toUpdate = await StudyParticipantDao.getParticipantsByStudy(studyId);
+
+        //检查toUpdate是否不为空，并且toUpdate[0]包含participantIds属性
+        if (toUpdate.length > 0 && 'participantIds' in toUpdate[0]) {
+            const idsToUpdate = toUpdate[0].participantIds;
+            
+            //您可以在此处处理idsToUpdate
+            await ParticipantDao.anonymizeParticipants(idsToUpdate);
+
+            res.status(200).send({ success: true, toUpdate: toUpdate, updatedCount: idsToUpdate.length });
+        } else {
+            //没有找到要更新的participantIds，可能返回一个不同的响应
+            res.status(204).send({ success: true, message: 'No participants to update' });
+        }
+
+    } catch (error) {
+        console.error(error);
+        res.status(500).send({ success: false, message: 'Internal Server Error' });
     }
 });
 

@@ -1,4 +1,5 @@
 import StudyParticipant from '../domain/StudyParticipantDomain.js';
+import mongoose from 'mongoose';
 
 class StudyParticipantDao {
     // static async createStudyParticipant(data) {
@@ -33,6 +34,14 @@ class StudyParticipantDao {
             isActive: true
         };
         return await StudyParticipant.countDocuments(query);
+    }
+
+    static async getActiveStudyParticipantsCountsByStudyIds(studyIds) {
+        const counts = await StudyParticipant.aggregate([
+            { $match: { studyId: { $in: studyIds }, isActive: true } },
+            { $group: { _id: "$studyId", count: { $sum: 1 } } }
+        ]);
+        return counts;
     }
 
     static async findStudyParticipantById(id) {
@@ -123,8 +132,44 @@ class StudyParticipantDao {
     
         return matchedDocuments.length;  // 返回处理的文档数量。
     }
-    
 
+    static async getParticipantsByStudy(studyId) {
+        const pipeline = [
+            { $match: { studyId: mongoose.Types.ObjectId(studyId) } },
+            {
+                $lookup: {
+                    from: 'Participant',
+                    localField: 'participantId',
+                    foreignField: '_id',
+                    as: 'participant'
+                }
+            },
+            { $unwind: '$participant' },
+            { $match: { 'participant.isWillContact': false } },
+            {
+                $lookup: {
+                    from: 'StudyParticipant',
+                    localField: 'participantId',
+                    foreignField: 'participantId',
+                    as: 'relatedStudyParticipants'
+                }
+            },
+            {
+                $lookup: {
+                    from: 'Study',
+                    localField: 'relatedStudyParticipants.studyId',
+                    foreignField: '_id',
+                    as: 'relatedStudies'
+                }
+            },
+            { $unwind: '$relatedStudies' },
+            { $group: { _id: '$participantId', allClosed: { $min: '$relatedStudies.isClosed' } } },
+            { $match: { allClosed: true } },
+            { $group: { _id: null, participantIds: { $push: '$_id' } } }
+         ];
+        return await StudyParticipant.aggregate(pipeline);
+    }
+    
     static async deleteStudyParticipantById(id) {
         return await StudyParticipant.findByIdAndDelete(id);
     }

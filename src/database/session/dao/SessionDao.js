@@ -9,10 +9,6 @@ class SessionDao {
         return dbSession;
     }
     
-    static async retrieveSessionList() {
-        return await Session.find();
-    }
-    
     static async retrieveSessionById(id) {
         return await Session.findById(id);
     }
@@ -33,9 +29,15 @@ class SessionDao {
 
     }
     
+    /*
+    static async retrieveSessionList() {
+        return await Session.find();
+    }
+
     static async deleteSession(id) {
         return await Session.deleteOne({ _id: id });
     }
+    */
     
 }
 

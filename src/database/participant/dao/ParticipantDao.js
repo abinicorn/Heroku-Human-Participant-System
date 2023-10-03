@@ -1,4 +1,5 @@
 import Participant from '../domain/ParticipantDomain.js';
+import mongoose from 'mongoose';
 
 class ParticipantDao {
 
@@ -93,6 +94,44 @@ class ParticipantDao {
         }
     
         return matchedDocuments.length;  // 返回处理的文档数量。
+    }
+
+    // static async anonymizeParticipants(participantIds) {
+    //     const fakeEmailSuffix = '@deleteduser.com';
+    //     return await Participant.updateMany(
+    //         { _id: { $in: participantIds } },
+    //         { $set: { firstName: 'Deleted', lastName: 'Participant', email: { $concat: ['$_id', fakeEmailSuffix] }, phoneNum: '' } }
+    //     );
+    // }
+
+    static async anonymizeParticipants(participantIds) {
+        const objectIdList = participantIds.map(id => mongoose.Types.ObjectId(id)); // 转换为ObjectId，如果它们已经是ObjectId，则不必转换
+        
+        const pipeline = [
+            { $match: { _id: { $in: objectIdList } } },
+            {
+                $addFields: {
+                    email: {
+                        $concat: [
+                            { $toString: '$_id' }, // 转换ObjectId为字符串
+                            '@deleteduser.com'
+                        ]
+                    },
+                    firstName: 'Deleted',
+                    lastName: 'Participant',
+                    phoneNum: ''
+                }
+            },
+            {
+                $merge: {
+                    into: 'Participant', // 或者您的集合名字
+                    whenMatched: 'merge'
+                }
+            }
+        ];
+
+        // 执行聚合管道
+        return await Participant.aggregate(pipeline);
     }
 
     static async deleteParticipant(participantId) {

@@ -540,67 +540,112 @@ router.post('/add', async (req, res) => {
 
 
 
+// router.get('/studyList/:researcherId', async (req, res) => {
+
+
+//     const { researcherId } = req.params;
+
+
+//     try{
+//         const user = await ResearcherDao.getResearcherById(researcherId);
+
+
+//         const studlyInfoList = [];
+
+
+
+//         if (Array.isArray(user.studyList) && user.studyList.length > 0) {
+
+//             for (let i = 0; i < user.studyList.length; i++) {
+
+//                 let study = await StudyDao.retrieveStudyReport(user.studyList[i]);
+
+//                 if (!study) {
+//                     log4js.warn(`Researcher.router.get/studyList/:researcherId. Researcher ${researcherId} study not found`);
+//                     return res.status(HTTP_NOT_FOUND).json({ message: 'Study not found' });
+//                 }
+
+//                 const num = await StudyParticipantDao.getActiveStudyParticipantsCountByStudyId(study._id);
+//                 const result = {
+//                     studyId: study._id,
+//                     studyCode: study.studyCode,
+//                     studyName: study.studyName,
+//                     participantNum: study.participantNum,
+//                     participantCurrentNum: num,
+//                     status: study.isClosed,
+//                     description: study.description,
+//                     creator: study.creator,
+//                     researcherList: study.researcherList,
+//                     studyType: study.studyType,
+//                     recruitmentStartDate: study.recruitmentStartDate,
+//                     recruitmentCloseDate: study.recruitmentCloseDate,
+//                     location: study.location,
+//                     driveLink: study.driveLink,
+//                     createdAt: study.createdAt,
+//                     updatedAt: study.updatedAt,
+//                     surveyLink: study.surveyLink
+//                 }
+
+//                 studlyInfoList.push(result)
+//             }
+//         }
+
+
+//         log4js.info(`Researcher.router.get/studyList/:researcherId. Get ${researcherId} study info success`);
+//         return res.status(HTTP_SUCCESS)
+//             .json(studlyInfoList)
+
+//     } catch (error) {
+//         log4js.error(`Researcher.router.get/studyList/:researcherId. Internal server error: ${error}`);
+//         return res.status(HTTP_SERVER_ERROR).json({ message: 'Server error'})
+//     }
+
+// })
+
 router.get('/studyList/:researcherId', async (req, res) => {
-
-
     const { researcherId } = req.params;
-
-
     try{
         const user = await ResearcherDao.getResearcherById(researcherId);
-
-
-        const studlyInfoList = [];
-
-
-
-        if (Array.isArray(user.studyList) && user.studyList.length > 0) {
-
-            for (let i = 0; i < user.studyList.length; i++) {
-
-                let study = await StudyDao.retrieveStudyReport(user.studyList[i]);
-
-                if (!study) {
-                    log4js.warn(`Researcher.router.get/studyList/:researcherId. Researcher ${researcherId} study not found`);
-                    return res.status(HTTP_NOT_FOUND).json({ message: 'Study not found' });
-                }
-
-                const num = await StudyParticipantDao.getActiveStudyParticipantsCountByStudyId(study._id);
-                const result = {
-                    studyId: study._id,
-                    studyCode: study.studyCode,
-                    studyName: study.studyName,
-                    participantNum: study.participantNum,
-                    participantCurrentNum: num,
-                    status: study.isClosed,
-                    description: study.description,
-                    creator: study.creator,
-                    researcherList: study.researcherList,
-                    studyType: study.studyType,
-                    recruitmentStartDate: study.recruitmentStartDate,
-                    recruitmentCloseDate: study.recruitmentCloseDate,
-                    location: study.location,
-                    driveLink: study.driveLink,
-                    createdAt: study.createdAt,
-                    updatedAt: study.updatedAt,
-                    surveyLink: study.surveyLink
-                }
-
-                studlyInfoList.push(result)
-            }
+        
+        if (!Array.isArray(user.studyList) || user.studyList.length === 0) {
+            return res.status(HTTP_SUCCESS).json([]);
         }
 
+        // 一次性获取所有相关的学习报告
+        const studies = await StudyDao.findStudiesByIdsAndPopulate(user.studyList);
 
+        const counts = await StudyParticipantDao.getActiveStudyParticipantsCountsByStudyIds(user.studyList);
+        
+        const studlyInfoList = studies.map(study => {
+            const countObj = counts.find(c => c._id.toString() === study._id.toString()) || { count: 0 };
+            return {
+                studyId: study._id,
+                studyCode: study.studyCode,
+                studyName: study.studyName,
+                participantNum: study.participantNum,
+                participantCurrentNum: countObj.count,
+                status: study.isClosed,
+                description: study.description,
+                creator: study.creator,
+                researcherList: study.researcherList,
+                studyType: study.studyType,
+                recruitmentStartDate: study.recruitmentStartDate,
+                recruitmentCloseDate: study.recruitmentCloseDate,
+                location: study.location,
+                driveLink: study.driveLink,
+                createdAt: study.createdAt,
+                updatedAt: study.updatedAt,
+                surveyLink: study.surveyLink
+            };
+        });
+        
         log4js.info(`Researcher.router.get/studyList/:researcherId. Get ${researcherId} study info success`);
-        return res.status(HTTP_SUCCESS)
-            .json(studlyInfoList)
-
+        return res.status(HTTP_SUCCESS).json(studlyInfoList);
     } catch (error) {
         log4js.error(`Researcher.router.get/studyList/:researcherId. Internal server error: ${error}`);
-        return res.status(HTTP_SERVER_ERROR).json({ message: 'Server error'})
+        return res.status(HTTP_SERVER_ERROR).json({ message: 'Server error'});
     }
-
-})
+});
 
 
 router.get('/allResearchers', async (req, res) => {

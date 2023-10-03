@@ -55,41 +55,6 @@ router.get('/:sessionId', async (req, res) => {
     
 });
 
-// View participant list button: display session’s participants’ list
-router.get('/participant/list/:sessionId', async (req, res) => {
-    
-    try {
-        
-        const { sessionId } = req.params;
-        const session = await SessionDao.retrieveSessionById(sessionId);
-        const participantList = session.participantList;
-        let participantListInfo = [];
-
-        for (let index = 0; index < participantList.length; index++) {
-            const participantInfo = await ParticipantDao.getParticipantById(participantList[index]);
-            if (!participantInfo) {
-                log4js.warn(`Participant with ID ${studyParticipant.participantId} not found.`);
-                return null;
-            } else {
-                participantListInfo.push(participantInfo);
-            }
-        }
-
-        if (participantListInfo) {
-            res.status(HTTP_SUCCESS).json(participantListInfo);
-            log4js.info(`Session.router.get./participant/list/:sessionId. SessionId:${sessionId}, Participant list amount: ${participantListInfo.length}`)
-        }
-        else {
-            res.status(HTTP_NOT_FOUND).json({message: 'Participant list not found'});
-            log4js.warn(`Session.router.get./participant/list/:sessionId doesn't find participant data from sessionId ${sessionId}`);
-        }
-
-    } catch (error) {
-        res.status(HTTP_SERVER_ERROR).json({message: "An error occurred", error});
-        log4js.error(`Session.router.get./participant/list/:sessionId. Internal server error: ${error}`);
-    }
-
-});
 
 // Create a new session 
 router.post('/:studyId', async (req, res) => {
@@ -133,6 +98,7 @@ router.put('/:sessionId', async (req, res) => {
 
 });
 
+/*
 // Delete session button
 router.delete('/:sessionId', async (req, res) => {
     
@@ -152,5 +118,42 @@ router.delete('/:sessionId', async (req, res) => {
     }
     
 });
+
+// View participant list button: display session’s participants’ list
+router.get('/participant/list/:sessionId', async (req, res) => {
+    
+    try {
+        
+        const { sessionId } = req.params;
+        const session = await SessionDao.retrieveSessionById(sessionId);
+        const participantList = session.participantList;
+        let participantListInfo = [];
+
+        for (let index = 0; index < participantList.length; index++) {
+            const participantInfo = await ParticipantDao.getParticipantById(participantList[index]);
+            if (!participantInfo) {
+                log4js.warn(`Participant with ID ${studyParticipant.participantId} not found.`);
+                return null;
+            } else {
+                participantListInfo.push(participantInfo);
+            }
+        }
+
+        if (participantListInfo) {
+            res.status(HTTP_SUCCESS).json(participantListInfo);
+            log4js.info(`Session.router.get./participant/list/:sessionId. SessionId:${sessionId}, Participant list amount: ${participantListInfo.length}`)
+        }
+        else {
+            res.status(HTTP_NOT_FOUND).json({message: 'Participant list not found'});
+            log4js.warn(`Session.router.get./participant/list/:sessionId doesn't find participant data from sessionId ${sessionId}`);
+        }
+
+    } catch (error) {
+        res.status(HTTP_SERVER_ERROR).json({message: "An error occurred", error});
+        log4js.error(`Session.router.get./participant/list/:sessionId. Internal server error: ${error}`);
+    }
+
+});
+*/
 
 export default router;

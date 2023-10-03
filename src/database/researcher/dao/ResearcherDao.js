@@ -26,22 +26,6 @@ class ResearcherDao  {
         return  await Researcher.findById(id);
     }
 
-    static async  retrieveResearcherByFirstName(firstName) {
-
-        const researcher = await Researcher.find({
-            researcherFirstName: { $regex: firstName, $options: 'i' }
-        });
-        return researcher;
-    }
-
-    static async  retrieveResearcherByLastName(lastName) {
-
-        const researcher = await Researcher.find({
-            researcherLastName: { $regex: lastName, $options: 'i' }
-        });
-        return researcher;
-    }
-
     static async getResearcherByEmail(email){
         const researcher = await Researcher.findOne({email: email});
 
@@ -92,15 +76,6 @@ class ResearcherDao  {
 
     }
 
-    static async checkPassword(researcher, password){
-
-        bcrypt.compare(password, researcher.password, (err, result) => {
-
-            return !!result;
-        });
-
-
-    }
 
     static async removeStudyfromResearcher(studyId, researcherId){
 

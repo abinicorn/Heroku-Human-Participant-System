@@ -216,9 +216,42 @@ router.post('/addResearcher/:studyId', async (req, res) => {
     }
 });
 
+router.get('/studyReport/:studyId', async (req, res) => {
+    const studyId = req.params.studyId;
+    try {
+        const study = await StudyDao.retrieveStudyReport(studyId);
+
+        const result = {
+            studyId: study._id,
+            studyCode: study.studyCode,
+            name: study.studyName,
+            isClosed: study.isClosed,
+            description: study.description,
+            creator:  study.creator.firstName + ' ' + study.creator.lastName,
+            researcherList: study.researcherList,
+            studyType: study.studyType,
+            recruitmentStartDate: study.recruitmentStartDate,
+            recruitmentCloseDate: study.recruitmentCloseDate,
+            location: study.location,
+            driveLink: study.driveLink,
+            createdAt: study.createdAt,
+            updatedAt: study.updatedAt,
+            surveyLink: study.surveyLink
+        };
 
 
 
-
+        console.log(result);
+        if (!study) {
+            log4js.warn(`Study.router.get./studyReport/:studyId. StudyId:${studyId} not found`)
+            return res.status(HTTP_NOT_FOUND).json({ message: 'Study not found' })
+        }
+        res.status(HTTP_SUCCESS).json(result);
+        log4js.info(`Study.router.get./studyReport/:studyId. StudyId:${studyId} detail retrieved`)
+    } catch (error) {
+        res.status(HTTP_SERVER_ERROR).json({ message: 'An error occurred', error });
+        log4js.error(`Study.router.get./studyReport/:studyId. Internal server error: ${error}`);
+    }
+})
 
 export default router;

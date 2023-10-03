@@ -21,11 +21,24 @@ class StudyDao {
     static async retrieveStudy(id) {
         return await Study.findById(id)
     }
+    // static async retrieveStudyReport(id) {
+    //     return await Study.findById(id)
+    //         .populate("creator")
+    //         .populate("researcherList");
+    // }
+
     static async retrieveStudyReport(id) {
         return await Study.findById(id)
-            .populate("creator")
-            .populate("researcherList");
+            .populate("creator", "firstName lastName email username createdAt updatedAt isActive") // 只选择您需要的字段
+            .populate("researcherList", "firstName lastName email username createdAt updatedAt isActive"); // 只选择您需要的字段
     }
+
+    static async findStudiesByIdsAndPopulate(studyIds) {
+        return await Study.find({ _id: { $in: studyIds } })
+            .populate("creator", "firstName lastName email username createdAt updatedAt isActive")
+            .populate("researcherList", "firstName lastName email username createdAt updatedAt isActive");
+    }
+    
 
     static async retrieveStudyList(idList) {
         return await Study.find({ _id: { $in: idList } });
