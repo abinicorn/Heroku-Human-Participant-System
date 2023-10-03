@@ -26,7 +26,8 @@
     "path": "^0.12.7",
     "swagger-jsdoc": "^6.2.8",
     "swagger-ui-express": "^5.0.0",
-    "uuid": "^9.0.0"
+    "uuid": "^9.0.0",
+    "esm": "^3.2.25"
   },
   "devDependencies": {
     "@babel/core": "^7.23.0",
