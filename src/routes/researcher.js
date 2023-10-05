@@ -311,7 +311,6 @@ router.put('/resetPwd', async (req, res) => {
 
         const checkPassword = await bcrypt.compare(currentPwd, user.password);
 
-        console.log(checkPassword);
         if ( !checkPassword) {
             log4js.warn(`Researcher.router.put./resetPwd. Current password error`);
             return res.status(HTTP_LOGIN_ERROR).json({message: 'Current password error'})
@@ -611,7 +610,6 @@ router.get('/studyList/:researcherId', async (req, res) => {
             return res.status(HTTP_SUCCESS).json([]);
         }
 
-        // 一次性获取所有相关的学习报告
         const studies = await StudyDao.findStudiesByIdsAndPopulate(user.studyList);
 
         const counts = await StudyParticipantDao.getActiveStudyParticipantsCountsByStudyIds(user.studyList);
@@ -623,19 +621,19 @@ router.get('/studyList/:researcherId', async (req, res) => {
                 studyCode: study.studyCode,
                 studyName: study.studyName,
                 participantNum: study.participantNum,
-                participantCurrentNum: countObj.count,
+                participantCurrentNum: study.isAnonymous ? study.anonymousParticipantNum : countObj.count,
                 status: study.isClosed,
-                description: study.description,
-                creator: study.creator,
-                researcherList: study.researcherList,
-                studyType: study.studyType,
+                // description: study.description,
+                // creator: study.creator,
+                // researcherList: study.researcherList,
+                // studyType: study.studyType,
                 recruitmentStartDate: study.recruitmentStartDate,
                 recruitmentCloseDate: study.recruitmentCloseDate,
-                location: study.location,
-                driveLink: study.driveLink,
-                createdAt: study.createdAt,
-                updatedAt: study.updatedAt,
-                surveyLink: study.surveyLink
+                // location: study.location,
+                // driveLink: study.driveLink,
+                // createdAt: study.createdAt,
+                // updatedAt: study.updatedAt,
+                // surveyLink: study.surveyLink
             };
         });
         
@@ -652,7 +650,6 @@ router.get('/allResearchers', async (req, res) => {
     
     try{ 
         const allResearchers= await ResearcherDao.retrieveResearcherList();
-        console.log(allResearchers);
         log4js.info(`Researcher.router.get/allResearchers. Get all researchers success`);
         return res.status(HTTP_SUCCESS)
             .json(allResearchers)

@@ -9,6 +9,8 @@ const studySchema = new Schema({
     creator: {type: Schema.Types.ObjectId, ref: 'Researcher'},
     researcherList:[{type: Schema.Types.ObjectId, ref: 'Researcher'}],
     studyType: String,
+    isAnonymous: {type: Boolean, default: false},
+    anonymousParticipantNum: Number,
     participantNum: Number,
     recruitmentStartDate: Date,
     recruitmentCloseDate: Date,
@@ -20,6 +22,9 @@ const studySchema = new Schema({
 }, {
     timestamps: {}
 });
+
+studySchema.index({ creator: 1 });
+studySchema.index({ researcherList: 1 });
 
 const Study = mongoose.model('Study', studySchema, 'Study');
 

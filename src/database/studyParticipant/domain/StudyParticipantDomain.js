@@ -44,7 +44,8 @@ const studyParticipantSchema = new mongoose.Schema({
     timestamps: {}
 });
 
-studyParticipantSchema.index({ studyId: 1 });
+studyParticipantSchema.index({ studyId: 1, isActive: 1 });
+studyParticipantSchema.index({ participantId: 1 });
 
 const StudyParticipant = mongoose.model('StudyParticipant', studyParticipantSchema,'StudyParticipant');
 

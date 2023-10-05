@@ -63,6 +63,7 @@ class StudyParticipantDao {
 
     static async findStudyParticipantsByStudyId(studyId) {
         return await StudyParticipant.find({ studyId, isActive: true })
+            .select("studyId serialNum isActive isComplete isGift isSentGift isWIllReceiveReport isSentReport note")
             .populate({
                 path: 'participantId',
                 select: 'firstName lastName email phoneNum tag isWillContact',  // select filling attributes

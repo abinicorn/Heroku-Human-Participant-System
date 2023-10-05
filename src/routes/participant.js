@@ -123,51 +123,51 @@ router.get('/:participantId', async (req, res) => {
     
 });
 
-//check if a participant can be reset info
-router.get('/check/:participantId', async (req, res) => {
-    try {
-        const { participantId } = req.params;
+// //check if a participant can be reset info
+// router.get('/check/:participantId', async (req, res) => {
+//     try {
+//         const { participantId } = req.params;
 
-        // Step 1: Check isWillContact in Participant table
-        const participant = await ParticipantDao.getParticipantById(participantId);
+//         // Step 1: Check isWillContact in Participant table
+//         const participant = await ParticipantDao.getParticipantById(participantId);
         
-        if (!participant) {
-            log4js.warn(`Participant.router.get./check/:participantId. Participant ${participantId} not found`)
-            return res.status(HTTP_NOT_FOUND).json({ error: "Participant not found" });
-        }
+//         if (!participant) {
+//             log4js.warn(`Participant.router.get./check/:participantId. Participant ${participantId} not found`)
+//             return res.status(HTTP_NOT_FOUND).json({ error: "Participant not found" });
+//         }
 
-        // Step 2: If isWillContact is not false, return shouldKeepInfo: true
-        if (participant.isWillContact !== false) {
-            log4js.info(`Participant.router.get./check/:participantId. Participant ${participantId} can be rest info`)
-            return res.json({ shouldKeepInfo: true });
-        }
+//         // Step 2: If isWillContact is not false, return shouldKeepInfo: true
+//         if (participant.isWillContact !== false) {
+//             log4js.info(`Participant.router.get./check/:participantId. Participant ${participantId} can be rest info`)
+//             return res.json({ shouldKeepInfo: true });
+//         }
 
-        // Step 3: Check SP table
-        const studyParticipants = await StudyParticipantDao.findStudyParticipantsByParticipantId(participantId);
+//         // Step 3: Check SP table
+//         const studyParticipants = await StudyParticipantDao.findStudyParticipantsByParticipantId(participantId);
         
-        for (const studyParticipant of studyParticipants) {
-            if (studyParticipant.isActive) {
-                return res.json({ shouldKeepInfo: false });
-            }
-        }
+//         for (const studyParticipant of studyParticipants) {
+//             if (studyParticipant.isActive) {
+//                 return res.json({ shouldKeepInfo: false });
+//             }
+//         }
 
-        // Step 4: If none of the SP documents are active, return shouldKeepInfo: true
-        return res.json({ shouldKeepInfo: true });
+//         // Step 4: If none of the SP documents are active, return shouldKeepInfo: true
+//         return res.json({ shouldKeepInfo: true });
 
-    } catch (error) {
-        if (process.env.NODE_ENV === 'production') {
-            res.status(HTTP_SERVER_ERROR).json({ error: "Internal server error." });
-            log4js.error(`Participant.router.get./check/:participantId. Internal server error : ${error}`);
-        } else {
-            res.status(HTTP_SERVER_ERROR).json({
-                error: "Failed to check participant.",
-                details: error.message
-            });
-            log4js.error(`Participant.router.get./check/:participantId. Failed to check participant : ${error}`);
-        }
+//     } catch (error) {
+//         if (process.env.NODE_ENV === 'production') {
+//             res.status(HTTP_SERVER_ERROR).json({ error: "Internal server error." });
+//             log4js.error(`Participant.router.get./check/:participantId. Internal server error : ${error}`);
+//         } else {
+//             res.status(HTTP_SERVER_ERROR).json({
+//                 error: "Failed to check participant.",
+//                 details: error.message
+//             });
+//             log4js.error(`Participant.router.get./check/:participantId. Failed to check participant : ${error}`);
+//         }
         
-    }
-});
+//     }
+// });
 
 // Update tag for multiple participants by their IDs
 router.put('/update-tag', async (req, res) => {

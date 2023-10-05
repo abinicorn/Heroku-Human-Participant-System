@@ -230,6 +230,8 @@ router.get('/studyReport/:studyId', async (req, res) => {
             creator:  study.creator.firstName + ' ' + study.creator.lastName,
             researcherList: study.researcherList,
             studyType: study.studyType,
+            isAnonymous: study.isAnonymous,
+            anonymousPartipantNum: study.anonymousPartipantNum,
             recruitmentStartDate: study.recruitmentStartDate,
             recruitmentCloseDate: study.recruitmentCloseDate,
             location: study.location,

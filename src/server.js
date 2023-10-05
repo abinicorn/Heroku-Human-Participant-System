@@ -6,6 +6,7 @@ import {swaggerSpec} from './config/swaggerConfig';
 import authenticateToken from './middlewares/authenticateToken';
 import cors from 'cors';
 
+const compression = require('compression');
 // Setup log4js
 const log4js = require('./utils/log4js');
 
@@ -21,8 +22,10 @@ dotenv.config();
 const app = express();
 const port = process.env.PORT || 3001;
 
+app.use(compression());
+
 app.use((req, res, next) => {
-    // res.header('Access-Control-Allow-Origin', 'http://localhost:3000'); hello world
+    // res.header('Access-Control-Allow-Origin', 'http://localhost:3000');
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
     res.setHeader('Access-Control-Allow-Origin', '*');

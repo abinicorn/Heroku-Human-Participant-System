@@ -35,8 +35,8 @@ class StudyDao {
 
     static async findStudiesByIdsAndPopulate(studyIds) {
         return await Study.find({ _id: { $in: studyIds } })
-            .populate("creator", "firstName lastName email username createdAt updatedAt isActive")
-            .populate("researcherList", "firstName lastName email username createdAt updatedAt isActive");
+            .populate("creator", "firstName lastName email username isActive")
+            .populate("researcherList", "firstName lastName email username isActive");
     }
     
 
