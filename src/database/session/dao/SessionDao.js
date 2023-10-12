@@ -28,12 +28,12 @@ class SessionDao {
         return dbSession != null;
 
     }
+
+    static async deleteSessionsByStudyId(studyId) {
+        return await Session.deleteMany({ studyId: studyId });
+    }
     
     /*
-    static async retrieveSessionList() {
-        return await Session.find();
-    }
-
     static async deleteSession(id) {
         return await Session.deleteOne({ _id: id });
     }

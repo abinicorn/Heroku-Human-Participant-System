@@ -1,6 +1,7 @@
 import express from 'express';
 import ParticipantDao from '../database/participant/dao/ParticipantDao.js';
 import StudyParticipantDao from '../database/studyParticipant/dao/StudyParticipantDao.js';
+import SessionDao from '../database/session/dao/SessionDao.js';
 
 const router = express.Router();
 const log4js = require('../utils/log4js.js');
@@ -14,7 +15,7 @@ import { HTTP_SUCCESS,
     HTTP_LOGIN_ERROR} from "../enum.js";
 
 
-// Create new participant
+// Create new participants
 router.post('/add', async (req, res) => {
     let participantsData = req.body.participants;
 
@@ -94,6 +95,35 @@ router.get('/all', async (req, res) => {
     
 });
 
+// Retrieve participants with isWillContact as true and populate their tag names
+router.get('/to-contact', async (req, res) => {
+
+    try {
+        const participants = await ParticipantDao.getParticipantsToContact();
+
+        if (participants && participants.length > 0) {
+            res.status(HTTP_SUCCESS).json(participants);
+            log4js.info(`Participant.router.get./to-contact. Retrieved participants to contact successfully.`);
+        } else {
+            res.status(HTTP_NO_CONTENT).json({ message: "No participants found with isWillContact as true." });
+            log4js.warn(`Participant.router.get./to-contact. No participants found with isWillContact as true.`);
+        }
+    } catch (error) {
+        if (process.env.NODE_ENV === 'production') {
+            res.status(HTTP_SERVER_ERROR).json({ error: "Internal server error." });
+            log4js.error(`Participant.router.get./to-contact. Internal server error : ${error}`);
+        } else {
+            res.status(HTTP_SERVER_ERROR).json({
+                error: "Failed to get participants to contact.",
+                details: error.message
+            });
+            log4js.error(`Participant.router.get./to-contact. Failed to get participants to contact : ${error}`);
+        }
+    }
+    
+});
+
+
 // Retrieve specific participant details
 router.get('/:participantId', async (req, res) => {
 
@@ -123,51 +153,6 @@ router.get('/:participantId', async (req, res) => {
     
 });
 
-// //check if a participant can be reset info
-// router.get('/check/:participantId', async (req, res) => {
-//     try {
-//         const { participantId } = req.params;
-
-//         // Step 1: Check isWillContact in Participant table
-//         const participant = await ParticipantDao.getParticipantById(participantId);
-        
-//         if (!participant) {
-//             log4js.warn(`Participant.router.get./check/:participantId. Participant ${participantId} not found`)
-//             return res.status(HTTP_NOT_FOUND).json({ error: "Participant not found" });
-//         }
-
-//         // Step 2: If isWillContact is not false, return shouldKeepInfo: true
-//         if (participant.isWillContact !== false) {
-//             log4js.info(`Participant.router.get./check/:participantId. Participant ${participantId} can be rest info`)
-//             return res.json({ shouldKeepInfo: true });
-//         }
-
-//         // Step 3: Check SP table
-//         const studyParticipants = await StudyParticipantDao.findStudyParticipantsByParticipantId(participantId);
-        
-//         for (const studyParticipant of studyParticipants) {
-//             if (studyParticipant.isActive) {
-//                 return res.json({ shouldKeepInfo: false });
-//             }
-//         }
-
-//         // Step 4: If none of the SP documents are active, return shouldKeepInfo: true
-//         return res.json({ shouldKeepInfo: true });
-
-//     } catch (error) {
-//         if (process.env.NODE_ENV === 'production') {
-//             res.status(HTTP_SERVER_ERROR).json({ error: "Internal server error." });
-//             log4js.error(`Participant.router.get./check/:participantId. Internal server error : ${error}`);
-//         } else {
-//             res.status(HTTP_SERVER_ERROR).json({
-//                 error: "Failed to check participant.",
-//                 details: error.message
-//             });
-//             log4js.error(`Participant.router.get./check/:participantId. Failed to check participant : ${error}`);
-//         }
-        
-//     }
-// });
 
 // Update tag for multiple participants by their IDs
 router.put('/update-tag', async (req, res) => {
@@ -316,16 +301,24 @@ router.delete('/anonymize-participants/:studyId', async (req, res) => {
         const studyId = req.params.studyId;
         const toUpdate = await StudyParticipantDao.getParticipantsByStudy(studyId);
 
-        //检查toUpdate是否不为空，并且toUpdate[0]包含participantIds属性
+        //Check if toUpdate is not empty and toUpdate[0] contains the participantIds attribute
         if (toUpdate.length > 0 && 'participantIds' in toUpdate[0]) {
             const idsToUpdate = toUpdate[0].participantIds;
             
-            //您可以在此处处理idsToUpdate
             await ParticipantDao.anonymizeParticipants(idsToUpdate);
+
+            await StudyParticipantDao.deleteStudyParticipantsByStudyId(studyId);
+
+            await SessionDao.deleteSessionsByStudyId(studyId);
+
+            await ParticipantDao.deleteAnonymizedParticipants();
 
             res.status(200).send({ success: true, toUpdate: toUpdate, updatedCount: idsToUpdate.length });
         } else {
-            //没有找到要更新的participantIds，可能返回一个不同的响应
+            await StudyParticipantDao.deleteStudyParticipantsByStudyId(studyId);
+
+            await SessionDao.deleteSessionsByStudyId(studyId);
+
             res.status(204).send({ success: true, message: 'No participants to update' });
         }
 

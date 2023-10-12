@@ -82,17 +82,18 @@ const expiresIn = '43200000';
  */
 router.post('/login', async (req, res) => {
     const { username, password } = req.body;
+
     try {
+
+        // Get userData by username, then check the password
         const user = await ResearcherDao.login(username);
-
-       const loginSuccess = await bcrypt.compare(password, user.password);
-
+        const loginSuccess = await bcrypt.compare(password, user.password);
         if ( !loginSuccess) {
                 log4js.warn(`Researcher.router.post./login. Failed to login : Username or password error`);
                 return res.status(HTTP_LOGIN_ERROR).json({ message: 'Username or password error' })
             }
 
-
+        // Create token in cookies
         const { _id } = user;
         const token = jwt.sign({ _id }, secret
             , { expiresIn }
@@ -169,7 +170,6 @@ router.get('/info/:researcherId', async (req, res) => {
         log4js.error(`Researcher.router.get./info/:researcherId. Internal server error: ${error}`);
         return res.status(HTTP_SERVER_ERROR).json({ message: 'Server error'})
     }
-
 })
 
 /**
@@ -372,6 +372,7 @@ router.put('/resetPwd', async (req, res) => {
  *             example:
  *               message: Server error
  */
+// Get studyList by researcherId
 router.get('/list/:researcherId', async (req, res) => {
 
     const { researcherId } = req.params;
@@ -444,7 +445,6 @@ router.get('/email/:email', async (req, res) => {
 
     try{
         const researcher = await ResearcherDao.getResearcherByEmail(email);
-        console.log(researcher);
         if (researcher) {
             log4js.info(`Researcher.router.get./email/:email. ResearcherId: ${researcher._id} retrieved successfully by email`);
             return res.status(HTTP_SUCCESS)
@@ -523,7 +523,7 @@ router.post('/add', async (req, res) => {
         isActive: true
     });
     try{
-        await ResearcherDao.createResearch(newResearcher);
+        await ResearcherDao.createResearcher(newResearcher);
 
         log4js.info(`Researcher.router.post/add. ${newResearcher.username} created success`);
         return res.status(HTTP_SUCCESS)
@@ -537,69 +537,6 @@ router.post('/add', async (req, res) => {
 })
 
 
-
-
-// router.get('/studyList/:researcherId', async (req, res) => {
-
-
-//     const { researcherId } = req.params;
-
-
-//     try{
-//         const user = await ResearcherDao.getResearcherById(researcherId);
-
-
-//         const studlyInfoList = [];
-
-
-
-//         if (Array.isArray(user.studyList) && user.studyList.length > 0) {
-
-//             for (let i = 0; i < user.studyList.length; i++) {
-
-//                 let study = await StudyDao.retrieveStudyReport(user.studyList[i]);
-
-//                 if (!study) {
-//                     log4js.warn(`Researcher.router.get/studyList/:researcherId. Researcher ${researcherId} study not found`);
-//                     return res.status(HTTP_NOT_FOUND).json({ message: 'Study not found' });
-//                 }
-
-//                 const num = await StudyParticipantDao.getActiveStudyParticipantsCountByStudyId(study._id);
-//                 const result = {
-//                     studyId: study._id,
-//                     studyCode: study.studyCode,
-//                     studyName: study.studyName,
-//                     participantNum: study.participantNum,
-//                     participantCurrentNum: num,
-//                     status: study.isClosed,
-//                     description: study.description,
-//                     creator: study.creator,
-//                     researcherList: study.researcherList,
-//                     studyType: study.studyType,
-//                     recruitmentStartDate: study.recruitmentStartDate,
-//                     recruitmentCloseDate: study.recruitmentCloseDate,
-//                     location: study.location,
-//                     driveLink: study.driveLink,
-//                     createdAt: study.createdAt,
-//                     updatedAt: study.updatedAt,
-//                     surveyLink: study.surveyLink
-//                 }
-
-//                 studlyInfoList.push(result)
-//             }
-//         }
-
-
-//         log4js.info(`Researcher.router.get/studyList/:researcherId. Get ${researcherId} study info success`);
-//         return res.status(HTTP_SUCCESS)
-//             .json(studlyInfoList)
-
-//     } catch (error) {
-//         log4js.error(`Researcher.router.get/studyList/:researcherId. Internal server error: ${error}`);
-//         return res.status(HTTP_SERVER_ERROR).json({ message: 'Server error'})
-//     }
-
-// })
 
 router.get('/studyList/:researcherId', async (req, res) => {
     const { researcherId } = req.params;
@@ -623,17 +560,9 @@ router.get('/studyList/:researcherId', async (req, res) => {
                 participantNum: study.participantNum,
                 participantCurrentNum: study.isAnonymous ? study.anonymousParticipantNum : countObj.count,
                 status: study.isClosed,
-                // description: study.description,
-                // creator: study.creator,
-                // researcherList: study.researcherList,
-                // studyType: study.studyType,
+                isCleared: study.isCleared,
                 recruitmentStartDate: study.recruitmentStartDate,
                 recruitmentCloseDate: study.recruitmentCloseDate,
-                // location: study.location,
-                // driveLink: study.driveLink,
-                // createdAt: study.createdAt,
-                // updatedAt: study.updatedAt,
-                // surveyLink: study.surveyLink
             };
         });
         
@@ -660,12 +589,5 @@ router.get('/allResearchers', async (req, res) => {
         }
 
 })
-
-
-
-
-
-
-
 
 export default router;

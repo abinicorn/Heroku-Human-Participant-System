@@ -12,7 +12,7 @@ import { HTTP_SUCCESS,
     HTTP_NO_CONTENT,
     HTTP_LOGIN_ERROR} from "../enum.js";
 
-
+//retrieve all tags in the db
 router.get('/all', async (req, res) => {
     try {
         const tags = await TagDao.getAllTags();
@@ -32,6 +32,7 @@ router.get('/all', async (req, res) => {
     }
 });
 
+//retrieve tag by tag id
 router.get('/:tagId', async (req, res) => {
     try {
         const { tagId } = req.params;
@@ -58,6 +59,7 @@ router.get('/:tagId', async (req, res) => {
     }
 });
 
+//add new tags to db
 router.post('/add', async (req, res) => {
     let tagsData = req.body.tags;
 

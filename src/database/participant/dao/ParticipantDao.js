@@ -19,14 +19,34 @@ class ParticipantDao {
         return await Participant.find({ email: { $in: emails } });
     }
 
-    // static async getParticipantByEmail(email) {
-    //     return (await Participant.findOne({ email: email }, '_id'))?._id ?? null;
-    // }
+    static async getParticipantsToContact() {
+        const pipeline = [
+            {
+                $match: { isWillContact: true } // get all docs with 'isWillContact:true'
+            },
+            {
+                $lookup: {
+                    from: "Tag",
+                    localField: "tag",
+                    foreignField: "_id",
+                    as: "tagNames"
+                }
+            },
+            {
+                $project: {
+                    email: 1,
+                    tag: "$tagNames.tagName" // only select 'tagName'
+                }
+            }
+        ];
+        
+        return await Participant.aggregate(pipeline);
+    }
 
     static async addTagByIds(ids, tagId) {
         const matchedDocuments = await Participant.updateMany(
             { _id: { $in: ids } },
-            { $addToSet: { tag: tagId } } // 使用 $addToSet 来避免重复添加 tagId
+            { $addToSet: { tag: tagId } } // Use $addToSet to avoid adding tagId repeatedly
         );
 
         if(matchedDocuments.modifiedCount == 0) {
@@ -37,20 +57,20 @@ class ParticipantDao {
         //     throw new Error('No documents found for the provided IDs.');
         // }
         
-        return matchedDocuments.modifiedCount; // 返回实际更新的文档数量。
+        return matchedDocuments.modifiedCount; // Returns the actual number of documents updated.
     }
 
     static async deleteTagByIds(ids, tagId) {
         const matchedDocuments = await Participant.updateMany(
             { _id: { $in: ids } },
-            { $pull: { tag: tagId } } // 使用 $pull 来删除 tag 数组中的 tagId
+            { $pull: { tag: tagId } } // Use $pull to delete the tagId in the tag array
         );
         
         if(matchedDocuments.modifiedCount == 0) {
             throw new Error('No documents found for the provided IDs.');
         }
         
-        return matchedDocuments.modifiedCount; // 返回实际更新的文档数量。
+        return matchedDocuments.modifiedCount; // Returns the actual number of documents updated.
     }
 
     static async updateParticipantById(participantId, updateData) {
@@ -59,7 +79,7 @@ class ParticipantDao {
     }
 
     static async toggleBooleanPropertyByIds(ids, propertyName) {
-        // 获取所有匹配的文档。
+        // Get all matching documents.
         const matchedDocuments = await Participant.find({ _id: { $in: ids } }).lean();
     
         if (!matchedDocuments || matchedDocuments.length === 0) {
@@ -69,7 +89,7 @@ class ParticipantDao {
         const idsToSetTrue = [];
         const idsToSetFalse = [];
     
-        // 根据当前的boolean值分类ID。
+        // Sort the ID based on the current boolean value.
         matchedDocuments.forEach(doc => {
             if (doc[propertyName]) {
                 idsToSetFalse.push(doc._id);
@@ -78,7 +98,7 @@ class ParticipantDao {
             }
         });
     
-        // 使用两个updateMany操作分别更新文档。
+        // Use two updateMany operations to update the document separately.
         if (idsToSetTrue.length) {
             await Participant.updateMany(
                 { _id: { $in: idsToSetTrue } },
@@ -93,19 +113,12 @@ class ParticipantDao {
             );
         }
     
-        return matchedDocuments.length;  // 返回处理的文档数量。
+        return matchedDocuments.length;  // Returns the number of documents processed.
     }
 
-    // static async anonymizeParticipants(participantIds) {
-    //     const fakeEmailSuffix = '@deleteduser.com';
-    //     return await Participant.updateMany(
-    //         { _id: { $in: participantIds } },
-    //         { $set: { firstName: 'Deleted', lastName: 'Participant', email: { $concat: ['$_id', fakeEmailSuffix] }, phoneNum: '' } }
-    //     );
-    // }
 
     static async anonymizeParticipants(participantIds) {
-        const objectIdList = participantIds.map(id => mongoose.Types.ObjectId(id)); // 转换为ObjectId，如果它们已经是ObjectId，则不必转换
+        const objectIdList = participantIds.map(id => mongoose.Types.ObjectId(id)); // Convert to ObjectId
         
         const pipeline = [
             { $match: { _id: { $in: objectIdList } } },
@@ -113,7 +126,7 @@ class ParticipantDao {
                 $addFields: {
                     email: {
                         $concat: [
-                            { $toString: '$_id' }, // 转换ObjectId为字符串
+                            { $toString: '$_id' }, // transfor ObjectId to string
                             '@deleteduser.com'
                         ]
                     },
@@ -124,19 +137,27 @@ class ParticipantDao {
             },
             {
                 $merge: {
-                    into: 'Participant', // 或者您的集合名字
+                    into: 'Participant',
                     whenMatched: 'merge'
                 }
             }
         ];
 
-        // 执行聚合管道
         return await Participant.aggregate(pipeline);
     }
 
     static async deleteParticipant(participantId) {
         return await Participant.findByIdAndDelete(participantId);
     }
+
+    static async deleteAnonymizedParticipants() {
+        const query = {
+            email: { $regex: /@deleteduser\.com$/, $options: "i" }, // match email ending with '@deleteduser.com'
+            $expr: { $eq: [{ $strLenCP: "$email" }, 40] } // ensure the length of email is 40
+        };
+        return await Participant.deleteMany(query);
+    }
+    
 }
 
 export default ParticipantDao;

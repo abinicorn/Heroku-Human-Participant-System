@@ -16,6 +16,7 @@ const studySchema = new Schema({
     recruitmentCloseDate: Date,
     location:[String],
     isClosed: {type: Boolean, default: false},
+    isCleared: {type: Boolean, default: false},
     surveyLink: String,
     driveLink: String
 

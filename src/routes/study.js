@@ -91,7 +91,7 @@ router.post('/:researcherId', async (req, res) => {
 router.get('/researcher/list/:studyId', async (req, res) => {
     try {
         const studyId = req.params.studyId;
-           // Query existing researcherId in the study
+        // Query existing researcherId in the study
         const researcherList = await StudyDao.retrieveResearcherListByStudyId(studyId);
         console.log(researcherList);
         res.status(HTTP_SUCCESS).json(researcherList);
@@ -102,27 +102,7 @@ router.get('/researcher/list/:studyId', async (req, res) => {
         }
     });
 
-/*
-// Route to edit study details by studyId
-router.put('/study/:studyId', async (req, res) => {
-    const studyId = req.params.studyId;
-    const updatedData = req.body;
-
-    try {
-        //updatedStudy variable will hold the updated study document with the latest changes as {new: true}
-        //This can be useful for displaying or further processing the updated information.
-        const updatedStudy = await StudyDao.updateStudy(studyId, updatedData, { new: true });
-        if (!updatedStudy) {
-            return res.status(HTTP_NOT_FOUND).json({ message: 'Study not found' });
-        }
-        res.status(HTTP_SUCCESS).json({ message: 'Study details updated successfully', updatedStudy });
-    } catch (error) {
-        res.status(HTTP_SERVER_ERROR).json({ message: 'An error occurred', error });
-    }
-});
-*/
-
-// Route to delete a study by studyId、
+// Route to remove a study by studyId
 router.put('/removeResearcher/:studyId/:researcherId', async (req, res) => {
 
     const studyId = req.params.studyId;
@@ -216,11 +196,11 @@ router.post('/addResearcher/:studyId', async (req, res) => {
     }
 });
 
+//Route to retrieve a study's information by studyId
 router.get('/studyReport/:studyId', async (req, res) => {
     const studyId = req.params.studyId;
     try {
         const study = await StudyDao.retrieveStudyReport(studyId);
-
         const result = {
             studyId: study._id,
             studyCode: study.studyCode,
@@ -235,15 +215,12 @@ router.get('/studyReport/:studyId', async (req, res) => {
             recruitmentStartDate: study.recruitmentStartDate,
             recruitmentCloseDate: study.recruitmentCloseDate,
             location: study.location,
+            isCleared: study.isCleared,
             driveLink: study.driveLink,
             createdAt: study.createdAt,
             updatedAt: study.updatedAt,
             surveyLink: study.surveyLink
         };
-
-
-
-        console.log(result);
         if (!study) {
             log4js.warn(`Study.router.get./studyReport/:studyId. StudyId:${studyId} not found`)
             return res.status(HTTP_NOT_FOUND).json({ message: 'Study not found' })

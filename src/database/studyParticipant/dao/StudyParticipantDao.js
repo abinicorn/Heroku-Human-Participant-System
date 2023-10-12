@@ -2,10 +2,6 @@ import StudyParticipant from '../domain/StudyParticipantDomain.js';
 import mongoose from 'mongoose';
 
 class StudyParticipantDao {
-    // static async createStudyParticipant(data) {
-    //     const studyParticipant = new StudyParticipant(data);
-    //     return await studyParticipant.save();
-    // }
 
     static async createMultipleStudyParticipants(studyId, participantIds) {
         const existingCount = await StudyParticipant.countDocuments({ studyId });
@@ -97,7 +93,7 @@ class StudyParticipantDao {
     }
 
     static async toggleBooleanPropertyByIds(ids, propertyName) {
-        // 获取所有匹配的文档。
+        // Get all matching documents.
         const matchedDocuments = await StudyParticipant.find({ _id: { $in: ids }, isActive: true }).lean();
     
         if (!matchedDocuments || matchedDocuments.length === 0) {
@@ -107,7 +103,7 @@ class StudyParticipantDao {
         const idsToSetTrue = [];
         const idsToSetFalse = [];
     
-        // 根据当前的boolean值分类ID。
+        // Sort the ID based on the current boolean value.
         matchedDocuments.forEach(doc => {
             if (doc[propertyName]) {
                 idsToSetFalse.push(doc._id);
@@ -116,7 +112,7 @@ class StudyParticipantDao {
             }
         });
     
-        // 使用两个updateMany操作分别更新文档。
+        // Use two updateMany operations to update documents separately.
         if (idsToSetTrue.length) {
             await StudyParticipant.updateMany(
                 { _id: { $in: idsToSetTrue } },
@@ -131,7 +127,7 @@ class StudyParticipantDao {
             );
         }
     
-        return matchedDocuments.length;  // 返回处理的文档数量。
+        return matchedDocuments.length;  // Returns the number of documents processed.
     }
 
     static async getParticipantsByStudy(studyId) {
@@ -174,6 +170,11 @@ class StudyParticipantDao {
     static async deleteStudyParticipantById(id) {
         return await StudyParticipant.findByIdAndDelete(id);
     }
+
+    static async deleteStudyParticipantsByStudyId(studyId) {
+        return await StudyParticipant.deleteMany({ studyId: studyId });
+    }
+    
 }
 
 export default StudyParticipantDao;

@@ -15,6 +15,7 @@ import { HTTP_SUCCESS,
 const router = express.Router();
 const log4js = require('../utils/log4js.js');
 
+//format the study participants data
 function transformDocument(originalDoc) {
     return {
         _id: originalDoc._id,
@@ -39,6 +40,7 @@ function transformDocument(originalDoc) {
     };
 }
 
+// count participants num in the study
 router.get('/count/:studyId', async (req, res) => {
     try {
         const { studyId } = req.params;

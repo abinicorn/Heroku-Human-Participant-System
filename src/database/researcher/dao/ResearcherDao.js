@@ -1,7 +1,5 @@
 import  Researcher  from "../domain/ResearcherDomain.js";
 import bcrypt from "bcrypt";
-import log4js from "../../../utils/log4js";
-import {HTTP_LOGIN_ERROR} from "../../../enum";
 
 
 

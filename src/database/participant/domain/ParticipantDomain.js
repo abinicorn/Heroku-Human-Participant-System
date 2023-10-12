@@ -31,6 +31,7 @@ const participantSchema = new Schema({
 
 participantSchema.index({ email: 1 });
 participantSchema.index({ tag: 1 });
+participantSchema.index({ isWillContact: 1 });
 
 const Participant = mongoose.model('Participant', participantSchema, 'Participant');
 

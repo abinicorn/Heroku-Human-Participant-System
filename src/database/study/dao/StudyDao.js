@@ -1,8 +1,9 @@
 import Study from "../domain/StudyDomain.js";
 
 class StudyDao {
-    static async createStudy(study) {
 
+    //To create a study
+    static async createStudy(study) {
         const dbStudy = new Study(study);
         await dbStudy.save();
         // await Study.findOneAndUpdate(
@@ -14,25 +15,25 @@ class StudyDao {
     }
 
 
+    //To retrieve all studies
     static async retrieveAllStudyList() {
         return await Study.find();
     }
 
+    //To retrieve all studies by studyId
     static async retrieveStudy(id) {
         return await Study.findById(id)
     }
-    // static async retrieveStudyReport(id) {
-    //     return await Study.findById(id)
-    //         .populate("creator")
-    //         .populate("researcherList");
-    // }
 
+    //To retrieve the study details with creator and researcherList populated by studyId
     static async retrieveStudyReport(id) {
         return await Study.findById(id)
-            .populate("creator", "firstName lastName email username createdAt updatedAt isActive") // 只选择您需要的字段
-            .populate("researcherList", "firstName lastName email username createdAt updatedAt isActive"); // 只选择您需要的字段
+            .populate("creator", "firstName lastName email username createdAt updatedAt isActive") 
+            .populate("researcherList", "firstName lastName email username createdAt updatedAt isActive"); 
     }
 
+
+    //To retrieve all studies information with creator and researcherlist populated by studyIdList
     static async findStudiesByIdsAndPopulate(studyIds) {
         return await Study.find({ _id: { $in: studyIds } })
             .populate("creator", "firstName lastName email username isActive")
@@ -40,10 +41,13 @@ class StudyDao {
     }
     
 
+    //To retrieve all studies information by studyIdList
     static async retrieveStudyList(idList) {
         return await Study.find({ _id: { $in: idList } });
     }
 
+
+    //To update study information by studyId and study data
     static async updateStudy(studyId, studyData) {
         try {
             const dbStudy = await Study.findOneAndUpdate(
@@ -56,10 +60,7 @@ class StudyDao {
         }
     }
 
-    static async deleteStudyById(id) {
-        await Study.deleteOne({ _id: id });
-    }
-
+    //To retreieve researcherList of a study by studyId
     static async retrieveResearcherListByStudyId(studyId) {
 
         try {
@@ -77,6 +78,8 @@ class StudyDao {
         }
     }
 
+
+    //To remove a researcher from the researcher list of a study by studyId and researcherId
     static async removeResearherfromStudy(studyId, researcherId) {
 
         try {
@@ -110,14 +113,24 @@ class StudyDao {
         return dbStudy != null;
     }
 
+
+    // To retrieve the study's creator by studyId
     static async findCreator(studyId) {
         const dbStudy = await Study.findOne({ _id: studyId });
         return dbStudy.creator;
     }
+
+    //To retrieve the study by studyCode
     static async findStudyByCode(code) {
         const dbStudy = await Study.findOne({ studyCode: code });
         return dbStudy;
     }
+
+
+    //For further use of deleting a study
+    // static async deleteStudyById(id) {
+    //     await Study.deleteOne({ _id: id });
+    // }
 
 }
 
